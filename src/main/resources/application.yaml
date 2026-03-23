@@ -1,0 +1,79 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api  # 接口前缀，所有接口需加/api访问，比如/api/student/login
+    tomcat:
+      threads:
+        max: 800  # 最大线程数，提升并发性能
+        min-spare: 20  # 最小空闲线程数
+        accept-count: 200  # 请求队列长度，超过则拒绝连接
+
+spring:
+  # MySQL数据库配置（核心：驱动、URL、账号密码）
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/first?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 831022806a
+    # 连接池配置（必加，提升性能）
+    hikari:
+      maximum-pool-size: 10  # 最大连接数
+      minimum-idle: 5        # 最小空闲连接数
+      connection-timeout: 300000  # 连接超时时间
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # Redis配置（补充完整，避免连接异常）
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0  # 使用第0个库
+      timeout: 10000ms  # 连接超时
+      # 连接池配置（Redisson依赖此配置）
+      lettuce:
+        pool:
+          max-active: 100  # 最大活跃连接数
+          max-idle: 50     # 最大空闲连接数
+          min-idle: 0     # 最小空闲连接数
+          max-wait: -1ms  # 最大等待时间
+
+# MyBatis-Plus配置（修正包路径、补充关键配置）
+mybatis-plus:
+  mapper-locations: classpath:mybatis/*.xml  # Mapper XML文件路径（确保resources下有mybatis文件夹）
+  type-aliases-package: com.example.courseregistrationsystem.entity  # 修正为你的实体包路径
+  global-config:
+    db-config:
+      id-type: auto  # 主键自增（匹配你的表结构）
+      logic-delete-field: deleted  # 逻辑删除字段（可选）
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true  # 下划线转驼峰（必须开启，匹配实体字段）
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 打印SQL日志（开发环境用，生产建议关闭）
+    cache-enabled: false  # 关闭二级缓存（避免数据不一致）
+
+# JWT配置（补充完整，规范格式）
+jwt:
+  secret: course_system_2026  # JWT签名密钥（自定义，建议生产环境用更长的随机字符串）
+  expire: 86400000  # 过期时间（毫秒），86400000=24小时
+  token-header: Authorization  # 请求头中令牌的key（比如Bearer token）
+  token-prefix: Bearer  # 令牌前缀
+
+
+# Redisson配置（必须加，否则布隆过滤器/分布式锁用不了）
+Redisson:
+  address: redis://localhost:6379  # Redis地址（和上面spring.data.redis一致）
+  database: 0
+  timeout: 10000
+  # 若Redis有密码，加这行：
+  # password: 你的Redis密码（没有就注释掉）
+
+
+# 日志配置（可选，规范日志输出）
+logging:
+  level:
+    com.example.courseregistrationsystem: debug  # 你的业务包日志级别
+    org.redisson: warn  # Redisson日志级别
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
